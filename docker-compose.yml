@@ -1,0 +1,15 @@
+version: "3"
+services:
+  node1:
+    build:
+      context: .
+      dockerfile: Dockerfile-CTIC
+    ports:
+      - "21000:21000"
+      - "22000:22000"
+      - "9000:9000"
+    volumes:
+      - ./docker/volumes/node1:/root/alastria
+    entrypoint:
+      - ./start.sh
+      - dockerfile

@@ -3,3 +3,4 @@ scripts/permissioned-nodes.json
 go1*
 data/keys
 *~
+docker/volumes
