@@ -1,6 +1,9 @@
+*~
+docker/volumes
 scripts/nohup.out
 scripts/permissioned-nodes.json
 go1*
 data/keys
-*~
-docker/volumes
+go-ethereum
+scripts/go
+scripts/wrk
