@@ -2,3 +2,4 @@ scripts/nohup.out
 scripts/permissioned-nodes.json
 go1*
 data/keys
+*~
