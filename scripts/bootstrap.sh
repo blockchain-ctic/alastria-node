@@ -182,4 +182,12 @@ elif [ $OS = "ubuntu" ];then
 
 fi
 
+# Manage GOROOT variable
+if [[ -z "$GOROOT" ]]; then
+  export GOROOT="/usr/local/go"
+  echo 'export GOROOT="/usr/local/go"' >> ~/.bashrc
+  export PATH=$PATH:$GOROOT/bin
+  echo 'export PATH=$PATH:$GOROOT/bin'  >> ~/.bashrc
+fi
+
 set +e

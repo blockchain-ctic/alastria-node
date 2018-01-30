@@ -1,29 +1,71 @@
 #!/bin/bash
-set -u
-set -e
 
-_TIME=$(date +%Y%m%d%H%M%S)
+MESSAGE='Usage: monitor <mode>
+    mode: build | start '
 
-script ~/alastria/logs/monitor__"${_TIME}".log
+if ( [ $# -ne 1 ] ); then
+    echo "$MESSAGE"
+    exit
+fi
 
-lsof -i | grep *:21000 | awk '{print $8 $9 $10}'
-lsof -i | grep *:22000 | awk '{print $8 $9 $10}'
-lsof -i | grep *:9000 | awk '{print $8 $9 $10}'
+# Optional way of handling $GOROOT
+# if [ -z "$GOROOT" ]; then
+#     echo "Please set your $GOROOT or run ~/alastria/bootstrap.sh"
+#     exit 1
+# fi
 
-geth -exec 'admin.nodeInfo' attach ~/alastria/data/geth.ipc
-geth -exec 'admin.peers.length' attach ~/alastria/data/geth.ipc
-geth -exec 'admin.peers' attach ~/alastria/data/geth.ipc
-geth -exec 'eth.blockNumber' attach ~/alastria/data/geth.ipc
-geth -exec 'eth.mining' attach ~/alastria/data/geth.ipc
-geth -exec 'eth.syncing' attach ~/alastria/data/geth.ipc
-geth -exec 'eth.pendingTransactions' attach ~/alastria/data/geth.ipc
-geth -exec 'istanbul.candidates' attach ~/alastria/data/geth.ipc
-geth -exec 'istanbul.getValidators()' attach ~/alastria/data/geth.ipc
-geth -exec 'net.peerCount' attach ~/alastria/data/geth.ipc
-geth -exec 'net.version' attach ~/alastria/data/geth.ipc
-geth -exec 'txpool.content' attach ~/alastria/data/geth.ipc
+if [[ -z "$GOROOT" ]]; then
+    echo "[*] Trying default $GOROOT. If the script fails please run ~/alastria-node/bootstrap.sh or configure GOROOT correctly"
+    export GOROOT=/usr/local/go
+    export PATH=$PATH:$GOROOT/bin
+fi
 
-exit
+if [[ ! -z "$GOPATH" ]]; then
+    GOPATHCHANGED="true"
+    GOPATHOLD="$GOPATH"
+fi
 
-set +u
-set +e
+
+if ( [ "build" == "$1" ]); then 
+
+    # if hash glide 2>/dev/null; then
+    #     echo "[*] Installing glide"
+    #     curl https://glide.sh/get | sh
+    # fi
+
+    echo "[*] Removing previous versions"
+    rm -rf ~/alastria/monitor
+    mkdir ~/alastria/monitor
+    echo "[*] Cloning monitor's repository"
+    cd ~/alastria/monitor
+    export GOPATH=$(pwd)
+    echo "Go PATH: $GOPATH"
+    echo "GOROOT: $GOROOT"
+    export PATH=$GOPATH/bin:$PATH
+    mkdir ~/alastria/monitor/bin
+    go get "github.com/robfig/cron"
+    echo "[*] Installing glide"
+    curl https://glide.sh/get | sh
+    mkdir ~/alastria/monitor/src/github.com/alastria
+    cd ~/alastria/monitor/src/github.com/alastria
+    git clone "https://github.com/alastria/monitor"
+
+    cd ~/alastria/monitor/src/github.com/alastria/monitor        
+    git checkout tags/v0.0.1-alpha
+    
+    echo "[*] Installing dependencies"
+    glide install
+    echo "[*] Building the monitor"
+    go build
+fi
+
+if ( [ "start" == "$1" ]); then 
+    cd ~/alastria/monitor/src/github.com/alastria/monitor
+    echo "[*] Starting monitor"
+    ~/alastria/monitor/src/github.com/alastria/monitor/monitor &
+fi
+
+if [[ ! -z "$GOPATHCHANGED" ]]; then
+    export GOPATH=$GOPATHOLD
+    export PATH=$GOPATH/bin:$PATH
+fi
