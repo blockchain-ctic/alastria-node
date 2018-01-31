@@ -1,12 +1,14 @@
 #!/bin/bash
 
 MESSAGE='Usage: monitor <mode>
-    mode: build | start '
+    mode: build | start | version | latest'
 
 if ( [ $# -ne 1 ] ); then
     echo "$MESSAGE"
     exit
 fi
+
+_TIME=$(date +%Y%m%d%H%M%S)
 
 # Optional way of handling $GOROOT
 # if [ -z "$GOROOT" ]; then
@@ -50,8 +52,10 @@ if ( [ "build" == "$1" ]); then
     cd ~/alastria/monitor/src/github.com/alastria
     git clone "https://github.com/alastria/monitor"
 
-    cd ~/alastria/monitor/src/github.com/alastria/monitor        
-    git checkout tags/v0.0.1-alpha
+    cd ~/alastria/monitor/src/github.com/alastria/monitor
+    LATEST_TAG=`git describe --tags \`git rev-list --tags --max-count=1\``
+    echo "LATESTTAG: $LATEST_TAG"       
+    git checkout tags/$LATEST_TAG
     
     echo "[*] Installing dependencies"
     glide install
@@ -62,7 +66,17 @@ fi
 if ( [ "start" == "$1" ]); then 
     cd ~/alastria/monitor/src/github.com/alastria/monitor
     echo "[*] Starting monitor"
-    ~/alastria/monitor/src/github.com/alastria/monitor/monitor &
+    nohup ~/alastria/monitor/src/github.com/alastria/monitor/monitor >> ~/alastria/logs/monitor_"${_TIME}".log &
+fi
+
+if ( [ "latest" == "$1" ]); then 
+    cd ~/alastria/monitor/src/github.com/alastria/monitor
+    git describe --tags `git rev-list --tags --max-count=1` # gets tags across all branches, not just the current branch
+fi
+
+if ( [ "version" == "$1" ]); then 
+    cd ~/alastria/monitor/src/github.com/alastria/monitor
+    git tag
 fi
 
 if [[ ! -z "$GOPATHCHANGED" ]]; then
