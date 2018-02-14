@@ -14,3 +14,4 @@ services:
     entrypoint:
       - ./start.sh
       - dockerfile
+    privileged: true
